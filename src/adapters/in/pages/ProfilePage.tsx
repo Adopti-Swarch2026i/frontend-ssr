@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mail, MapPin, Pencil, Phone, Save, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { Pet } from "@/domain/entities/Pet";
 import type { User } from "@/domain/entities/User";
 
 // ─── Schema ────────────────────────────────────────────────────────────────
@@ -264,11 +265,25 @@ function ProfileInfoCard({ user }: ProfileInfoCardProps) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export function ProfilePage() {
+interface ProfilePageProps {
+  initialPets?: Pet[];
+}
+
+export function ProfilePage({ initialPets }: ProfilePageProps = {}) {
   const { user } = useAuth();
-  const { pets, loading, listPets } = usePets();
+  const { pets: fetchedPets, loading, listPets } = usePets();
+  const hasInitialPets = useRef(Boolean(initialPets?.length));
+
+  const pets =
+    hasInitialPets.current && fetchedPets.length === 0
+      ? (initialPets ?? [])
+      : fetchedPets;
 
   useEffect(() => {
+    if (hasInitialPets.current) {
+      hasInitialPets.current = false;
+      return;
+    }
     if (user?.id) listPets({ reporterId: user.id });
   }, [user?.id, listPets]);
 

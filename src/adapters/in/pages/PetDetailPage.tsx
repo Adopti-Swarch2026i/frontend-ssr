@@ -12,24 +12,28 @@ import { usePets } from "@/adapters/in/hooks/usePets";
 import { chatConversationHref, petEditHref, ROUTES } from "@/config/routes";
 import type { Pet } from "@/domain/entities/Pet";
 
-export function PetDetailPage() {
+interface PetDetailPageProps {
+  initialPet?: Pet | null;
+}
+
+export function PetDetailPage({ initialPet }: PetDetailPageProps = {}) {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const router = useRouter();
   const { user } = useAuth();
   const { getPetById, deleteReport, loading } = usePets();
   const { findOrCreateConversation } = useChatContext();
-  const [pet, setPet] = useState<Pet | null>(null);
+  const [pet, setPet] = useState<Pet | null>(initialPet ?? null);
   const [contactError, setContactError] = useState<string | null>(null);
   const [contactLoading, setContactLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    if (id && !initialPet) {
       getPetById(id).then((p) => setPet(p));
     }
-  }, [id, getPetById]);
+  }, [id, getPetById, initialPet]);
 
   const handleContact = useCallback(async () => {
     if (!pet || !user) return;

@@ -152,12 +152,15 @@ export class PetApiAdapter implements PetRepository {
     const uploads = files.map(async (file) => {
       const formData = new FormData();
       formData.append("file", file);
-      const { data } = await this.http.post<{ image_url: string }>(
-        "/pets/upload-image",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      return data.image_url;
+      const { data } = await this.http.post<{
+        url: string;
+        thumbnailUrl: string;
+        hash: string;
+        cached: boolean;
+      }>("/media/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return data.url;
     });
     return Promise.all(uploads);
   }

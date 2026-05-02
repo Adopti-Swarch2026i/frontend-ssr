@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,17 +9,51 @@ import { PetGrid } from "@/adapters/in/components/pets/PetGrid";
 import { PetFilters } from "@/adapters/in/components/pets/PetFilters";
 import { usePets } from "@/adapters/in/hooks/usePets";
 import { ROUTES } from "@/config/routes";
-import type { PetFilters as PetFiltersType, PetStats } from "@/domain/entities/Pet";
+import type {
+  Pet,
+  PetFilters as PetFiltersType,
+  PetStats,
+} from "@/domain/entities/Pet";
 
 const PAGE_SIZE = 12;
 
-export function DashboardPage() {
-  const { pets, total, loading, listPets, getStats } = usePets();
+interface DashboardPageProps {
+  initialPets?: Pet[];
+  initialTotal?: number;
+  initialStats?: PetStats;
+}
+
+export function DashboardPage({
+  initialPets,
+  initialTotal,
+  initialStats,
+}: DashboardPageProps = {}) {
+  const {
+    pets: fetchedPets,
+    total: fetchedTotal,
+    loading,
+    listPets,
+    getStats,
+  } = usePets();
   const [filters, setFilters] = useState<PetFiltersType>({});
   const [page, setPage] = useState(1);
-  const [stats, setStats] = useState<PetStats | null>(null);
+  const [stats, setStats] = useState<PetStats | null>(initialStats ?? null);
+
+  const hasInitialPets = useRef(Boolean(initialPets));
+  const hasInitialStats = useRef(Boolean(initialStats));
+
+  const pets = hasInitialPets.current && fetchedPets.length === 0 && page === 1 && Object.keys(filters).length === 0
+    ? (initialPets ?? [])
+    : fetchedPets;
+  const total = hasInitialPets.current && fetchedPets.length === 0 && page === 1 && Object.keys(filters).length === 0
+    ? (initialTotal ?? 0)
+    : fetchedTotal;
 
   useEffect(() => {
+    if (hasInitialPets.current) {
+      hasInitialPets.current = false;
+      return;
+    }
     listPets({ ...filters, page, pageSize: PAGE_SIZE });
   }, [filters, page, listPets]);
 
@@ -29,6 +63,10 @@ export function DashboardPage() {
   };
 
   useEffect(() => {
+    if (hasInitialStats.current) {
+      hasInitialStats.current = false;
+      return;
+    }
     getStats().then((s) => {
       if (s) setStats(s);
     });
