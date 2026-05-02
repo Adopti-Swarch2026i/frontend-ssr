@@ -24,11 +24,15 @@ export async function POST(request: NextRequest) {
     const { cookieValue, expiresAt } = await createSession(parsed.data.idToken);
     const env = getServerEnv();
     const response = NextResponse.json({ ok: true });
+    const secureCookie =
+      process.env.SESSION_COOKIE_SECURE === "true" ||
+      (process.env.SESSION_COOKIE_SECURE !== "false" &&
+        new URL(request.url).protocol === "https:");
     response.cookies.set({
       name: env.SESSION_COOKIE_NAME,
       value: cookieValue,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: secureCookie,
       sameSite: "lax",
       path: "/",
       expires: expiresAt,
