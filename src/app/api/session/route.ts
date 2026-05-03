@@ -24,10 +24,21 @@ export async function POST(request: NextRequest) {
     const { cookieValue, expiresAt } = await createSession(parsed.data.idToken);
     const env = getServerEnv();
     const response = NextResponse.json({ ok: true });
+    // Detrás de NGINX (gateway) `request.url` siempre es http://frontend:3000
+    // aunque el cliente original venga por HTTPS. Por eso preferimos el
+    // header X-Forwarded-Proto cuando el reverse proxy lo añade.
+    // SESSION_COOKIE_SECURE=true|false fuerza el flag explícitamente para
+    // dev local sobre HTTP donde el navegador rechaza Secure.
+    const forwardedProto = request.headers.get("x-forwarded-proto");
+    const explicit = process.env.SESSION_COOKIE_SECURE;
     const secureCookie =
-      process.env.SESSION_COOKIE_SECURE === "true" ||
-      (process.env.SESSION_COOKIE_SECURE !== "false" &&
-        new URL(request.url).protocol === "https:");
+      explicit === "true"
+        ? true
+        : explicit === "false"
+          ? false
+          : forwardedProto
+            ? forwardedProto.split(",")[0].trim() === "https"
+            : new URL(request.url).protocol === "https:";
     response.cookies.set({
       name: env.SESSION_COOKIE_NAME,
       value: cookieValue,

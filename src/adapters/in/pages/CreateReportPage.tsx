@@ -14,6 +14,7 @@ export function CreateReportPage() {
     const result = await createReport(data);
     if (result) {
       router.push(ROUTES.DASHBOARD);
+      router.refresh();
     }
   };
 

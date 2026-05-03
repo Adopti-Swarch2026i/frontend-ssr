@@ -96,6 +96,7 @@ export function EditReportPage() {
     const result = await updateReport({ id: pet.id, ...data });
     if (result) {
       router.push(petDetailHref(pet.id));
+      router.refresh();
     }
   };
 

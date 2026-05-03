@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { PawPrint, MessageCircle, LogOut, User, Plus } from "lucide-react";
+import { PawPrint, MessageCircle, LogOut, User, Plus, Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,8 +24,10 @@ export function Navbar() {
 
   const navLinks = [
     { label: "Mascotas", path: ROUTES.DASHBOARD, icon: PawPrint },
+    { label: "Buscar", path: ROUTES.SEARCH, icon: Search },
     { label: "Reportar", path: ROUTES.CREATE_REPORT, icon: Plus },
     { label: "Chat", path: ROUTES.CHAT, icon: MessageCircle, badge: totalUnread },
+    { label: "Notificaciones", path: ROUTES.NOTIFICATIONS, icon: Bell },
   ];
 
   return (
@@ -71,7 +73,14 @@ export function Navbar() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2 cursor-pointer">
                   <Avatar className="h-7 w-7">
-                    <AvatarImage src={user.photoURL} alt={user.displayName} />
+                    <AvatarImage
+                      src={
+                        user.photoURL
+                          ? `/api/avatar?url=${encodeURIComponent(user.photoURL)}`
+                          : undefined
+                      }
+                      alt={user.displayName}
+                    />
                     <AvatarFallback className="text-xs">
                       {user.displayName?.charAt(0)?.toUpperCase() ?? "U"}
                     </AvatarFallback>

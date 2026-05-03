@@ -76,7 +76,14 @@ function ProfileHero({ user, totalPets, lostCount, foundCount, reunitedCount }: 
           style={{ background: "hsl(var(--background))" }}
         >
           <Avatar className="h-20 w-20 md:h-24 md:w-24 shadow-lg">
-            <AvatarImage src={user.photoURL} alt={user.displayName} />
+            <AvatarImage
+              src={
+                user.photoURL
+                  ? `/api/avatar?url=${encodeURIComponent(user.photoURL)}`
+                  : undefined
+              }
+              alt={user.displayName}
+            />
             <AvatarFallback
               className="text-2xl font-bold"
               style={{

@@ -83,8 +83,7 @@ export const petApiServer = {
     if (filters?.page) params.page = filters.page;
     if (filters?.pageSize) params.page_size = filters.pageSize;
     const data = await fetchJson<PaginatedResponse>("/pets", params, {
-      revalidate: 30,
-      tags: ["pets"],
+      revalidate: false,
     });
     return {
       results: data.results.map(mapReportToPet),
@@ -96,8 +95,7 @@ export const petApiServer = {
 
   async findById(id: string): Promise<Pet> {
     const data = await fetchJson<BackendReport>(`/pets/${id}`, undefined, {
-      revalidate: 60,
-      tags: ["pets", `pet:${id}`],
+      revalidate: false,
     });
     return mapReportToPet(data);
   },
@@ -107,7 +105,7 @@ export const petApiServer = {
       lost: number;
       found: number;
       reunited: number;
-    }>("/pets/stats", undefined, { revalidate: 60, tags: ["pets-stats"] });
+    }>("/pets/stats", undefined, { revalidate: false });
     return {
       totalLost: data.lost,
       totalFound: data.found,

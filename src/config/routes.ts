@@ -8,6 +8,8 @@ export const ROUTES = {
   CHAT: "/chat",
   CHAT_CONVERSATION: "/chat/:conversationId",
   PROFILE: "/profile",
+  NOTIFICATIONS: "/notifications",
+  SEARCH: "/search",
 } as const;
 
 export function petDetailHref(id: string): string {

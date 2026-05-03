@@ -23,6 +23,10 @@ const serverSchema = z.object({
   CHAT_GRAPHQL_URL_INTERNAL: z.string().url().default("http://gateway/api/chat/graphql"),
   SESSION_COOKIE_NAME: z.string().default("__session"),
   SESSION_DURATION_DAYS: z.coerce.number().int().min(1).max(14).default(5),
+  SESSION_CHECK_REVOCATION: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
 });
 
 export type ClientEnv = z.infer<typeof clientSchema>;
@@ -75,6 +79,7 @@ export function getServerEnv(): ServerEnv {
     CHAT_GRAPHQL_URL_INTERNAL: process.env.CHAT_GRAPHQL_URL_INTERNAL,
     SESSION_COOKIE_NAME: process.env.SESSION_COOKIE_NAME,
     SESSION_DURATION_DAYS: process.env.SESSION_DURATION_DAYS,
+    SESSION_CHECK_REVOCATION: process.env.SESSION_CHECK_REVOCATION,
   });
 
   if (!result.success) {
@@ -89,6 +94,7 @@ export function getServerEnv(): ServerEnv {
       CHAT_GRAPHQL_URL_INTERNAL: "http://gateway/api/chat/graphql",
       SESSION_COOKIE_NAME: "__session",
       SESSION_DURATION_DAYS: 5,
+      SESSION_CHECK_REVOCATION: false,
     };
   } else {
     _serverEnv = result.data;

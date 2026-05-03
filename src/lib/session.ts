@@ -29,9 +29,14 @@ export async function verifySession(): Promise<Session | null> {
   const cookie = cookieStore.get(env.SESSION_COOKIE_NAME);
   if (!cookie?.value) return null;
   try {
+    // El check de revocation hace round-trip a Firebase Admin en cada
+    // request. Solo lo hacemos si SESSION_CHECK_REVOCATION está activo
+    // (por defecto false). Para operaciones sensibles, llamar a
+    // verifySession con check explícito es mejor que pagar la latencia
+    // en cada navegación.
     const decoded = await getFirebaseAuth().verifySessionCookie(
       cookie.value,
-      true
+      env.SESSION_CHECK_REVOCATION
     );
     return {
       uid: decoded.uid,

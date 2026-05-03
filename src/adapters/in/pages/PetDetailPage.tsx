@@ -3,20 +3,36 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { PetDetailView } from "@/adapters/in/components/pets/PetDetailView";
 import { LoadingSpinner } from "@/adapters/in/components/shared/LoadingSpinner";
 import { useAuth } from "@/adapters/in/hooks/useAuth";
 import { useChatContext } from "@/context/ChatContext";
 import { usePets } from "@/adapters/in/hooks/usePets";
-import { chatConversationHref, petEditHref, ROUTES } from "@/config/routes";
+import { chatConversationHref, petEditHref, ROUTES, petDetailHref } from "@/config/routes";
 import type { Pet } from "@/domain/entities/Pet";
+
+interface MatchSuggestion {
+  lostPetId: number;
+  lostReportId: number;
+  foundPetId: number;
+  foundReportId: number;
+  score: number;
+  species: string | null;
+  breed: string | null;
+  color: string | null;
+  city: string | null;
+}
 
 interface PetDetailPageProps {
   initialPet?: Pet | null;
+  initialMatches?: MatchSuggestion[];
 }
 
-export function PetDetailPage({ initialPet }: PetDetailPageProps = {}) {
+export function PetDetailPage({
+  initialPet,
+  initialMatches = [],
+}: PetDetailPageProps = {}) {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const router = useRouter();
@@ -63,6 +79,7 @@ export function PetDetailPage({ initialPet }: PetDetailPageProps = {}) {
     setDeleteLoading(false);
     if (ok) {
       router.push(ROUTES.DASHBOARD);
+      router.refresh();
     } else {
       setDeleteError("No se pudo eliminar el reporte.");
     }
@@ -117,6 +134,81 @@ export function PetDetailPage({ initialPet }: PetDetailPageProps = {}) {
         deleteLoading={deleteLoading}
         deleteError={deleteError}
       />
+
+      {initialMatches.length > 0 && (
+        <section className="mt-10">
+          <header className="mb-4 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" aria-hidden />
+            <h2 className="font-heading text-xl font-semibold text-foreground">
+              Coincidencias sugeridas
+            </h2>
+            <span className="text-xs text-muted-foreground">
+              {initialMatches.length}
+            </span>
+          </header>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {initialMatches.map((m) => {
+              // El frontend identifica una mascota por report.id (mapReportToPet
+              // hace id: String(report.id)), por eso el link usa el reportId del
+              // contraparte, no el petId.
+              const otherReportId =
+                pet.status === "lost" ? m.foundReportId : m.lostReportId;
+              const otherPetId =
+                pet.status === "lost" ? m.foundPetId : m.lostPetId;
+              const scorePct = Math.round(m.score * 100);
+              return (
+                <li
+                  key={`${m.lostReportId}-${m.foundReportId}`}
+                  className="rounded-lg border border-border bg-card p-4"
+                >
+                  <Link
+                    href={petDetailHref(String(otherReportId))}
+                    className="block hover:opacity-90"
+                  >
+                    <div className="flex items-baseline justify-between mb-2">
+                      <span className="font-medium text-foreground">
+                        Mascota #{otherPetId} · Reporte #{otherReportId}
+                      </span>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                        title="Score absoluto del match (0–100)"
+                      >
+                        {scorePct}%
+                      </span>
+                    </div>
+                    <dl className="text-xs text-muted-foreground space-y-0.5">
+                      {m.species && (
+                        <div>
+                          <dt className="inline font-medium">Especie:</dt>{" "}
+                          <dd className="inline">{m.species}</dd>
+                        </div>
+                      )}
+                      {m.breed && (
+                        <div>
+                          <dt className="inline font-medium">Raza:</dt>{" "}
+                          <dd className="inline">{m.breed}</dd>
+                        </div>
+                      )}
+                      {m.color && (
+                        <div>
+                          <dt className="inline font-medium">Color:</dt>{" "}
+                          <dd className="inline">{m.color}</dd>
+                        </div>
+                      )}
+                      {m.city && (
+                        <div>
+                          <dt className="inline font-medium">Ciudad:</dt>{" "}
+                          <dd className="inline">{m.city}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
